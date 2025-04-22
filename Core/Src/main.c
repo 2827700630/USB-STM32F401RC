@@ -18,12 +18,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "usbd_cdc_if.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -87,19 +86,14 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  uint8_t data[] = "Hello USB Virtual COM!\r\n";
-  CDC_Transmit_FS(data, sizeof(data)-1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin); // Toggle the LED
-    CDC_Transmit_FS(data, sizeof(data)-1);
-    HAL_Delay(500); // Delay for 500 ms
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
