@@ -30,6 +30,45 @@
 python collect_DLC_files.py
 ```
 
+## 脚本说明：collect_DLC_files.py
+
+本仓库核心的自动化整理脚本为 `collect_DLC_files.py`，你可以直接运行它来完成相关源码的收集、头文件路径修正以及自动生成统一包含头文件的功能。
+
+### 工作原理
+
+- **遍历范围**  
+  脚本会遍历项目根目录下 `Middlewares` 和 `USB_DEVICE` 两个文件夹（可自定义），自动查找所有 `.c` 和 `.h` 文件。
+- **文件分类**  
+  - 所有 `.c` 文件会被复制到 `Core/Src/DLCc/`
+  - 所有 `.h` 文件会被复制到 `Core/Inc/DLCh/`
+- **头文件路径修正**  
+  在复制 `.c` 文件时，会自动将其中的 `#include "xxx.h"` 替换为 `#include "DLCh/xxx.h"`，以适配新目录结构。
+  - **例外**：以 `stm32` 开头的头文件不会被修正，避免破坏官方库引用。
+- **自动生成统一头文件**  
+  在 `Core/Inc/` 目录下自动生成 `all_dlch_includes.h`，内容为所有收集到的头文件的 `#include "DLCh/xxx.h"`。
+
+### 如何修改遍历范围
+
+如果你需要的相关代码存放在不同的文件夹，只需修改脚本顶部的 `SEARCH_DIRS` 列表即可：
+
+```python
+def collect_files_and_generate_header(project_root):
+    # 可自定义：只遍历这些顶级目录
+    SEARCH_DIRS = [
+        "Middlewares",
+        "USB_DEVICE"
+    ]
+    ...
+```
+> 例如，如果你还想遍历 `Drivers` 目录，只需改为：
+> ```python
+> SEARCH_DIRS = [
+>     "Middlewares",
+>     "USB_DEVICE",
+>     "Drivers"
+> ]
+> ```
+
 ---
 
 ### 2. 整理结果
@@ -47,7 +86,7 @@ python collect_DLC_files.py
     ```c
     #include "all_DLC_includes.h"
     ```
-    即可自动包含所有 USB 相关头文件。
+    即可自动包含所有相关头文件。
 
 ---
 
