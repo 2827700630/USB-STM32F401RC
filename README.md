@@ -2,14 +2,16 @@
 
 ## 项目简介
 
-本工具用于自动化整理 STM32 项目开发中常见的 Middlewares 下的 `.c` 和 `.h` 文件，将它们收集到指定的新目录，并自动修正 `.c` 文件中的头文件引用路径，方便嵌入式开发者统一管理和引用 USB 相关源码。
+本工具用于自动化整理 STM32 项目开发中 Middlewares 下的 `.c` 和 `.h` 文件，将它们收集到指定的新目录，并自动修正 `.c` 文件中的头文件引用路径，便于统一管理源码，并在 PlatformIO 中极为实用。
 
-> **特色功能：**
-> - 自动收集 `.c` 文件到 `Core/Src/DLCc`
-> - 自动收集 `.h` 文件到 `Core/Inc/DLCh`
-> - 自动修正 `.c` 文件中的头文件引用（将 `#include "xxx.h"` 替换为 `#include "DLCh/xxx.h"`，支持排除如 `stm32f4xx.h` 这类头文件）
-> - 自动生成 `Core/Inc/all_dlch_includes.h`，一键包含所有 USB 相关头文件
-> - 支持无 Python 环境运行（自动下载便携版 Python）
+在 STM32CubeIDE 或 CubeMX 中使用 Middlewares 组件时，库代码默认分散在根目录下，不便于 platformio 编译。使用本工具可自动收集并整理代码，便于在 platformio 或其他跨平台环境统一管理和引用。
+
+**主要功能：**
+- 自动收集 `.c` 文件到 `Core/Src/DLCc`
+- 自动收集 `.h` 文件到 `Core/Inc/DLCh`
+- 自动修正 `.c` 文件中的头文件引用（如 `#include "xxx.h"` 替换为 `#include "DLCh/xxx.h"`，支持排除如 `stm32f4xx.h` 这类头文件）
+- 自动生成 `Core/Inc/all_dlch_includes.h`，一键包含所有 USB 相关头文件
+- 支持无 Python 环境运行（自动下载便携版 Python）
 
 ---
 
@@ -17,133 +19,104 @@
 
 ### 1. 运行方式
 
-#### 方式一：直接运行批处理启动器
+#### 推荐方式一：双击批处理启动器
 
-双击运行 `STM32_DLC收集器启动器.bat.bat`  
-无需本地 Python 环境，脚本会自动检测并下载安装便携版 Python。
+- 直接双击 `collect_DLC_files_launcher.bat`  
+  无需本地 Python 环境，脚本会自动检测并下载安装便携版 Python。
 
 #### 方式二：手动运行 Python 脚本
-
-手动运行collect_DLC_files.py
 
 ```bash
 python collect_DLC_files.py
 ```
 
-## 脚本说明：collect_DLC_files.py
+### 2. 脚本说明
 
-本仓库核心的自动化整理脚本为 `collect_DLC_files.py`，你可以直接运行它来完成相关源码的收集、头文件路径修正以及自动生成统一包含头文件的功能。
+核心脚本为 `collect_DLC_files.py`，支持源码收集、头文件路径修正和统一包含头文件的自动生成。
 
-### 工作原理
+#### 工作原理
 
 - **遍历范围**  
-  脚本会遍历项目根目录下 `Middlewares` 和 `USB_DEVICE` 两个文件夹（可自定义），自动查找所有 `.c` 和 `.h` 文件。
+  默认遍历项目根目录下的 `Middlewares` 和 `USB_DEVICE`（可自定义）。
 - **文件分类**  
-  - 所有 `.c` 文件会被复制到 `Core/Src/DLCc/`
-  - 所有 `.h` 文件会被复制到 `Core/Inc/DLCh/`
+  - 所有 `.c` 文件复制到 `Core/Src/DLCc/`
+  - 所有 `.h` 文件复制到 `Core/Inc/DLCh/`
 - **头文件路径修正**  
-  在复制 `.c` 文件时，会自动将其中的 `#include "xxx.h"` 替换为 `#include "DLCh/xxx.h"`，以适配新目录结构。
-  - **例外**：以 `stm32` 开头的头文件不会被修正，避免破坏官方库引用。
+  复制 `.c` 文件时自动将 `#include "xxx.h"` 替换为 `#include "DLCh/xxx.h"`，以适配新结构。
+  - 以 `stm32` 开头的头文件不会被修正，避免破坏官方库引用。
 - **自动生成统一头文件**  
-  在 `Core/Inc/` 目录下自动生成 `all_dlch_includes.h`，内容为所有收集到的头文件的 `#include "DLCh/xxx.h"`。
+  在 `Core/Inc/` 目录自动生成 `all_dlch_includes.h`，内容为所有收集到头文件的 `#include "DLCh/xxx.h"`。
 
-### 如何修改遍历范围
+#### 自定义遍历目录
 
-如果你需要的相关代码存放在不同的文件夹，只需修改脚本顶部的 `SEARCH_DIRS` 列表即可：
+如需修改遍历目录，编辑脚本顶部的 `SEARCH_DIRS` 列表，例如：
 
 ```python
-def collect_files_and_generate_header(project_root):
-    # 可自定义：只遍历这些顶级目录
-    SEARCH_DIRS = [
-        "Middlewares",
-        "USB_DEVICE"
-    ]
-    ...
+SEARCH_DIRS = [
+    "Middlewares",
+    "USB_DEVICE",
+    "Drivers"   # 增加 Drivers 目录
+]
 ```
-> 例如，如果你还想遍历 `Drivers` 目录，只需改为：
-> ```python
-> SEARCH_DIRS = [
->     "Middlewares",
->     "USB_DEVICE",
->     "Drivers"
-> ]
-> ```
 
 ---
 
-### 2. 整理结果
+### 3. 整理结果
 
-- 所有 `.c` 文件将被移动到：`Core/Src/DLCc`
-- 所有 `.h` 文件将被移动到：`Core/Inc/DLCh`
-- 自动生成 `Core/Inc/all_DLC_includes.h`
-    - 内容为：
-      ```c
-      #include "DLCh/usb_device.h"
-      #include "DLCh/usbd_core.h"
-      // ...自动枚举所有收集到的头文件
-      ```
-- 你只需在 `main.c` 中：
-    ```c
-    #include "all_DLC_includes.h"
-    ```
-    即可自动包含所有相关头文件。
+- `.c` 文件移动至：`Core/Src/DLCc`
+- `.h` 文件移动至：`Core/Inc/DLCh`
+- 自动生成 `Core/Inc/all_dlch_includes.h`，内容如：
+
+  ```c
+  #include "DLCh/usb_device.h"
+  #include "DLCh/usbd_core.h"
+  // ...自动枚举所有头文件
+  ```
+
+- 只需在 `main.c` 中：
+
+  ```c
+  #include "all_dlch_includes.h"
+  ```
+
+  即可一次性包含所有 USB 相关头文件。
 
 ---
 
-### 3. 具体使用过程（以STM32 USB虚拟串口为例）
+### 4. 典型使用流程（以 STM32 USB 虚拟串口为例）
 
-#### 3.1 在 STM32CubeMX/STM32CubeIDE 中新建工程并基本配置
+#### 4.1 使用 STM32CubeMX/IDE 新建工程
 
-1. **新建工程**  
-   打开 STM32CubeMX 或 STM32CubeIDE，新建一个空白工程，选择你的目标芯片型号或开发板。
+1. **新建工程**：选择目标芯片或板卡
+2. **配置 Pinout & 时钟**：配置系统时钟和 Debug 接口
+3. **配置 USB**：在 Connectivity 分类里启用 `USB_OTG_FS`（或 HS），选择 Device Only
+4. **配置 Middlewares**：启用 `USB_DEVICE`，Class 选择 CDC（虚拟串口）
+5. **生成代码**：点击 Generate Code
 
-2. **基础配置**  
-   - 进入【Pinout & Configuration】界面，配置好**系统时钟（RCC）**以及**Debug接口（SYS → Serial Wire）**。
-   - 确保“配置时钟树”使 USB 工作时钟为 48MHz（如 HSE/HSI 时钟源经 PLL 输出 48MHz 到 USB）。
-   - 打开【Configuration】窗口，进入“System Core”中的“RCC”，选择合适的时钟源。
-   - 在“Project Manager”中填写工程名、保存路径等基本信息。
+#### 4.2 整理 DLC 文件
 
-3. **USB 配置**
-   - 在【Pinout & Configuration】界面，找到 `Connectivity` 分类，点击 `USB_OTG_FS`（或 `USB_OTG_HS`，取决于你的芯片）。
-   - 选择“Device Only”模式。  
-     > 其他配置保持默认即可，不需要额外设置。
+1. 将 `collect_DLC_files_launcher.bat` 和 `collect_DLC_files.py` 和 `platformio.ini` 复制到工程根目录
+2. 运行批处理启动器，自动完成文件收集、头文件修正、头文件总生成
+3. 整理完成后：
+   - `Core/Src/DLCc`：存放所有 USB 相关 `.c` 文件
+   - `Core/Inc/DLCh`：存放所有 USB 相关 `.h` 文件
+   - `Core/Inc/all_dlch_includes.h`：汇总所有头文件
+4. 使用VSCode打开工程文件夹
 
-4. **中间件（Middlewares）配置**
-   - 进入【Configuration】窗口，找到“Middleware”部分，选择并启用 “USB_DEVICE”。
-   - 在弹出配置窗口里，选择“Class For FS IP”为“Communication Device Class (Virtual Port Com)”（即虚拟串口 CDC）。
-   - 其他参数可保持默认。
-
-5. **生成代码**
-   - 点击“Project -> Generate Code”生成 CubeMX 工程代码（或在 CubeIDE 直接生成）。
-   - 生成后，关闭 CubeMX，使用 CubeIDE 打开工程。
-
-#### 3.2 使用本仓库工具进行代码整理
-
-1. 将本仓库的 `collect_DLC_files_launcher.bat` 和 `collect_DLC_files.py` 复制到 CubeMX 生成的工程根目录下（与 Middlewares、USB_DEVICE 等文件夹同级）。
-2. **运行批处理启动器**  
-   双击 `collect_DLC_files_launcher.bat`，依次完成文件收集、头文件修正与自动生成总头文件。
-3. 整理完成后，你会看到：
-   - `Core/Src/DLCc` 目录下存放所有 USB 相关 `.c` 文件
-   - `Core/Inc/DLCh` 目录下存放所有 USB 相关 `.h` 文件
-   - `Core/Inc/all_dlch_includes.h` 汇总所有头文件
-
-#### 3.3 main.c 示例改写
-
-将你的 `main.c` 文件按如下方式进行修改：
+#### 4.3 main.c 示例改写
 
 ```c
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-//#include "usb_device.h" // 在 PlatformIO 中需要注释
+//#include "usb_device.h" // 在 PlatformIO 中建议注释
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "all_dlch_includes.h" // 在 STM32CubeIDE 中需要注释，在 PlatformIO 中不用注释
+#include "all_dlch_includes.h" // 在 STM32CubeIDE 中建议注释，在 PlatformIO 中启用
 /* USER CODE END Includes */
 
 int main(void) {
-
   /* USER CODE BEGIN WHILE */
   while (1) {
     uint8_t data[] = "Hello USB Virtual COM!\r\n";
@@ -154,20 +127,21 @@ int main(void) {
 }
 ```
 
-- **注意：**  
-  - 在 STM32CubeIDE 下，通常直接 `#include "usb_device.h"`，而不要 `#include "all_dlch_includes.h"`。
-  - 在 PlatformIO 或其他跨平台环境下，建议注释 `usb_device.h`，使用 `all_dlch_includes.h`，确保能一次包含所有 USB 相关头文件。
+> - 在 STM32CubeIDE 下通常只 `#include "usb_device.h"`
+> - 在 PlatformIO 下建议用 `#include "all_dlch_includes.h"`，避免头文件遗漏
+> - 烧录后，使用串口助手可以看到STM32发来的消息
 
 ---
 
 ## 注意事项
 
-- 如果要回到 STM32CubeIDE 原生开发，只需**删除 `DLCc` 和 `DLCh` 两个文件夹及 `all_dlch_includes.h` 文件**，恢复默认的头文件引用方式即可。
-- 本工具适合 CubeMX 生成代码后，进行跨平台移植和统一头文件管理的场景。
-- 若有特殊自定义需求，请参阅脚本源码或提交 Issue。
+- 如需回到 STM32CubeIDE 原生开发，只需删除 `DLCc`、`DLCh` 文件夹及 `all_dlch_includes.h`，恢复默认头文件引用
+- 工具适用于 CubeMX 代码生成后，跨平台移植和头文件管理
+- 若有特殊需求请查阅脚本源码或提交 Issue
 
-- 本工具仅遍历项目根目录下的 `Middlewares` 和 `USB_DEVICE` 文件夹。
-- 仅修正简单头文件引用（`#include "xxx.h"`），不会处理复杂路径引用。
-- 以 `stm32` 开头的头文件不会被路径修正，避免与官方库冲突。
+**补充说明：**
+- 工具仅遍历根目录下 `Middlewares` 和 `USB_DEVICE` 文件夹
+- 仅修正简单 `#include "xxx.h"`，不会处理复杂路径
+- 以 `stm32` 开头的头文件不会被路径修正，避免与官方库冲突
 
 ---
