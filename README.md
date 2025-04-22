@@ -10,7 +10,7 @@
 - 自动收集 `.c` 文件到 `Core/Src/DLCc`
 - 自动收集 `.h` 文件到 `Core/Inc/DLCh`
 - 自动修正 `.c` 文件中的头文件引用（如 `#include "xxx.h"` 替换为 `#include "DLCh/xxx.h"`，支持排除如 `stm32f4xx.h` 这类头文件）
-- 自动生成 `Core/Inc/all_dlch_includes.h`，一键包含所有 USB 相关头文件
+- 自动生成 `Core/Inc/all_DLC_includes.h`，一键包含所有 USB 相关头文件
 - 支持无 Python 环境运行（自动下载便携版 Python）
 
 ---
@@ -21,7 +21,7 @@
 
 #### 推荐方式一：双击批处理启动器
 
-- 直接双击 `collect_DLC_files_launcher.bat`  
+- 直接双击 `STM32 DLC收集器启动器.bat`  
   无需本地 Python 环境，脚本会自动检测并下载安装便携版 Python。
 
 #### 方式二：手动运行 Python 脚本
@@ -45,7 +45,7 @@ python collect_DLC_files.py
   复制 `.c` 文件时自动将 `#include "xxx.h"` 替换为 `#include "DLCh/xxx.h"`，以适配新结构。
   - 以 `stm32` 开头的头文件不会被修正，避免破坏官方库引用。
 - **自动生成统一头文件**  
-  在 `Core/Inc/` 目录自动生成 `all_dlch_includes.h`，内容为所有收集到头文件的 `#include "DLCh/xxx.h"`。
+  在 `Core/Inc/` 目录自动生成 `all_DLC_includes.h`，内容为所有收集到头文件的 `#include "DLCh/xxx.h"`。
 
 #### 自定义遍历目录
 
@@ -65,7 +65,7 @@ SEARCH_DIRS = [
 
 - `.c` 文件移动至：`Core/Src/DLCc`
 - `.h` 文件移动至：`Core/Inc/DLCh`
-- 自动生成 `Core/Inc/all_dlch_includes.h`，内容如：
+- 自动生成 `Core/Inc/all_DLC_includes.h`，内容如：
 
   ```c
   #include "DLCh/usb_device.h"
@@ -76,7 +76,7 @@ SEARCH_DIRS = [
 - 只需在 `main.c` 中：
 
   ```c
-  #include "all_dlch_includes.h"
+  #include "all_DLC_includes.h"
   ```
 
   即可一次性包含所有 USB 相关头文件。
@@ -100,7 +100,7 @@ SEARCH_DIRS = [
 3. 整理完成后：
    - `Core/Src/DLCc`：存放所有 USB 相关 `.c` 文件
    - `Core/Inc/DLCh`：存放所有 USB 相关 `.h` 文件
-   - `Core/Inc/all_dlch_includes.h`：汇总所有头文件
+   - `Core/Inc/all_DLC_includes.h`：汇总所有头文件
 4. 使用VSCode打开工程文件夹
 
 #### 4.3 main.c 示例改写
@@ -113,7 +113,7 @@ SEARCH_DIRS = [
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "all_dlch_includes.h" // 在 STM32CubeIDE 中建议注释，在 PlatformIO 中启用
+#include "all_DLC_includes.h" // 在 STM32CubeIDE 中建议注释，在 PlatformIO 中启用
 /* USER CODE END Includes */
 
 int main(void) {
@@ -128,14 +128,14 @@ int main(void) {
 ```
 
 > - 在 STM32CubeIDE 下通常只 `#include "usb_device.h"`
-> - 在 PlatformIO 下建议用 `#include "all_dlch_includes.h"`，避免头文件遗漏
+> - 在 PlatformIO 下建议用 `#include "all_DLC_includes.h"`，避免头文件遗漏
 > - 烧录后，使用串口助手可以看到STM32发来的消息
 
 ---
 
 ## 注意事项
 
-- 如需回到 STM32CubeIDE 原生开发，只需删除 `DLCc`、`DLCh` 文件夹及 `all_dlch_includes.h`，恢复默认头文件引用
+- 如需回到 STM32CubeIDE 原生开发，只需删除 `DLCc`、`DLCh` 文件夹及 `all_DLC_includes.h`，恢复默认头文件引用
 - 工具适用于 CubeMX 代码生成后，跨平台移植和头文件管理
 - 若有特殊需求请查阅脚本源码或提交 Issue
 
